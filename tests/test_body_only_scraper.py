@@ -7,7 +7,7 @@ from scraper.scraper_strategies.body_only_scraper import BodyOnlyScraper
 class MyTestCase(unittest.TestCase):
     def test_something(self):
         scraper = BodyOnlyScraper()
-        html = HtmlScraper(scraper).get_structure_from("www.w3schools.com/")
+        html = HtmlScraper(scraper).get_structure_from("https://www.w3schools.com/")[0]
         self.assertEqual("", html.get_title())
         self.assertEqual("startscrolling_subtopnav(event)", html.tag_attribute_value("subtopnav", "onmousedown"))
         self.assertEqual("100%", html.tag_attribute_value("svg", "width"))

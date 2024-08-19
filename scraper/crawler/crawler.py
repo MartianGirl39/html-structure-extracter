@@ -7,11 +7,19 @@ import requests
 from time import sleep
 import numpy as np
 import random
-from multiprocessing import Pool
+import asyncio
+import aiohttp
+from aiohttp import ClientSession
+
+from multiprocessing import Pool, Process
+from concurrent.futures import ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
+
+from scraper.sessions.async_html_extracter import AsyncHtmlExtracter
+
 
 class SiteCrawler:
 
-    __slots__ = ('__scraper', '__url_list', '__break_point')
+    __slots__ = ('__scraper', '__url_list', '__break_point', '__extractor')
     def __new__(cls, scraper):
         if not hasattr(cls, 'instance'):
             cls.instance = super(SiteCrawler, cls).__new__(cls)
@@ -21,14 +29,15 @@ class SiteCrawler:
     def __init__(self, scraper):
         self.__url_list = ""
         self.__break_point = 0
+        self.__extractor = AsyncHtmlExtracter()
 
     def __attempt_open_robots(self, url):
         host = re.search(r'https://www(.*?)com', url).group(0)
         robots_url = host + '/robots.txt'
         page = requests.get(robots_url)
-        if page.status_code == 200:
-            return page.content.decode()
-        return None
+        if page.status_code != 200:
+            return None
+        return page.content.decode()
 
     def __create_sitemap_from_url(self, url):
         print("robots not found")
@@ -41,6 +50,10 @@ class SiteCrawler:
 
     def __init_list_from_site_map(self, map):
         links = []
+        # page = requests.get(map)
+        # if page.status_code != 200:
+        #     return None
+        # page = page.content.decode()
         page = requests.get(map)
         if page.status_code != 200:
             return None
@@ -55,7 +68,7 @@ class SiteCrawler:
         else:
             return re.findall('<loc>(.*?)</loc>', page)
 
-    def setWebpage(self, url):
+    def set_webpage(self, url):
         robots = self.__attempt_open_robots(url)
         if robots is None:
             self.__url_list = self.__create_sitemap_from_url(url)
@@ -73,14 +86,24 @@ class SiteCrawler:
     def get_break_point(self):
         return self.__break_point
 
-    def scrape(self, max_links):
+    def scrape(self, max_links=None):
+        if (max_links is None):
+            max_links = len(self.__url_list)
         html = []
         print("scraping")
-        for url in self.__url_list[self.__break_point: max_links]:
-            html.append(self.__scraper.get_structure_from(url))
+        start = time.perf_counter()
+        html = self.__scraper.get_structure_from(self.__url_list)
         print("done!")
+        finish = time.perf_counter()
+        print(f"It took {finish-start: .2f} second(s) to finish")
         self.__break_point += max_links
         return html
 
     def set_scraper(self, scraper):
         self.__scraper = scraper
+
+    def get_num_of_links(self):
+        return len(self.__url_list)
+
+def _get_futures(future):
+    print(future.result())

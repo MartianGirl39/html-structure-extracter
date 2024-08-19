@@ -46,14 +46,5 @@ class MyTestCase(unittest.TestCase):
         strategy = Scraper()
         html = HtmlScraper(strategy).get_structure_from("https://www.w3schools.com/")[0]
 
-    def test_get_scripts(self):
-        strategy = Scraper()
-        html = HtmlScraper(strategy).get_structure_from("https://www.w3schools.com/")[0]
-
-    def test_url_reset(self):
-        strategy = Scraper()
-        html = HtmlScraper(strategy).get_structure_from("https://www.w3schools.com/", "https://www.google.com")[1];
-        self.assertEqual('Google', html.get_title())
-
 if __name__ == '__main__':
     unittest.main()

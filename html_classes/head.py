@@ -63,7 +63,6 @@ class Head:
                 elif name == 'name' or name == 'property':
                     self.__meta[value] = ""
                     meta_id = value
-                    #print(meta_id)
                 elif name == 'content':
                     self.__meta[meta_id] = value
             elif tag_type == 'script' or tag_type == 'link':

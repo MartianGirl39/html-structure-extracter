@@ -9,31 +9,27 @@ class BodyOnlyScraper(Scraper):
     def __init__(self):
         super().__init__()
 
-    def scrape(self, args):
-        result = []
+    def scrape(self, page):
+        tag_regex = "<(.*?)>"
 
-        for url in args:
+        html = Html()
+        skip_to = page.find("/head")
+        page = page[skip_to+5:]
+        tags = re.findall(tag_regex, page)
+        table_rows = 0
 
-            page = self.attempt_open(url)
-
-            if page is None:
-                continue
-
-            tag_regex = "<(.*?)>"
-
-            html = Html()
-            skip_to = page.find("/head")
-            page = page[skip_to+5:]
-            tags = re.findall(tag_regex, page)
-            table_rows = 0
-            # tags = tags[skip_to + 4:]
-
-            for tag in tags:
-                # split by space and index 1 should be the tag type, do not save the delimited string as a list as it would be inacurrate for certain types
-                tag_type = tag.split(" ")[0]
-                if tag[0] == '/' or tag[0] == '!' or tag[0] == "=":
+        for tag in tags:
+            # split by space and index 1 should be the tag type, do not save the delimited string as a list as it would be inacurrate for certain types
+            tag_type = tag.split(" ")[0]
+            if tag[0] == '/' or tag[0] == '!' or tag[0] == "=":
+                if tag_type == '/table':
+                    table_rows = 0
                     continue
-                new_tag = Tag(tag_type)
+            new_tag = Tag(tag_type)
+            if tag_type == 'tr':
+                table_rows += 1
+                if table_rows > 50:
+                    return None
+            else:
                 html.add_tag(tag, "body")
-            result.append(html)
-        return result
+        return html
