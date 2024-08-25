@@ -1,8 +1,8 @@
 import unittest
 
-from datashark import chart
-from datashark.chart import Plot
-from datashark.html_data import HtmlData
+from data import chart
+from data.chart import Plot
+from data.html_data import HtmlData
 import numpy as np
 
 class MyTestCase(unittest.TestCase):

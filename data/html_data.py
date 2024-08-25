@@ -1,5 +1,5 @@
 from html_classes.html_full import Html
-from scraper.html_scraper import HtmlScraper
+from scraper.concurrent_html_scraper import HtmlScraper
 from scraper.scraper_strategies.scraper import Scraper
 
 

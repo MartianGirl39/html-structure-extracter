@@ -15,8 +15,7 @@ from html_classes.html_full import Html
 from scraper.scraper_strategies.scraper import Scraper
 
 
-
-class HtmlScraper:
+class ConcurrentHtmlScraper:
 
     __slots__ = ('__strategy', '__pool')
 
@@ -26,9 +25,6 @@ class HtmlScraper:
 
     async def __extract_data(self, url, session):
         print("scraping %s" % url)
-        if url in self.__pool:
-            print("retreiving from pool")
-            return self.__pool[url]
         try:
             async with session.get(url) as response:
                 try:
@@ -50,17 +46,52 @@ class HtmlScraper:
             print("error in session so return was none")
             return None
 
-    async def scrape(self, urls):
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=10, limit_per_host=3)) as session:
+    async def __extract_data_tasks(self, urls):
+        async with aiohttp.ClientSession() as session:
             tasks = [
                 self.__extract_data(url, session)
                 for url in urls
             ]
             results = await asyncio.gather(*tasks)
-            return results
+            return_val = []
+            for result in results:
+                if result is not None:
+                    return_val.append(result)
+            # print(return_val)
+            return return_val
 
-    def get_structure_from(self, *urls):
-        return asyncio.run(self.scrape(urls))
+    def async_wrapper(self, urls):
+        return asyncio.run(self.__extract_data_tasks(urls))
+
+    def scrape(self, urls):
+        cores = cpu_count()
+        executor = ProcessPoolExecutor()
+        tasks = [
+            executor.submit(self.async_wrapper, task_urls)
+            for task_urls in np.array_split(urls, cores)
+        ]
+        fin, _ = wait(tasks)
+
+        results = [
+            task.result()
+            for task in fin
+        ]
+        print("all tasks completed")
+        return results
+
+        #
+        #
+        # async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=10, limit_per_host=3)) as session:
+        #     tasks = [
+        #         self.__extract_data(url, session)
+        #         for url in urls
+        #     ]
+        #     results = await asyncio.gather(*tasks)
+        #     return results
+
+    def get_structure_from(self, urls):
+        return self.scrape(urls)
+        # return asyncio.run(self.scrape(urls))
 
     def set_strategy(self, strategy):
         self.__strategy = strategy

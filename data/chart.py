@@ -2,7 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from datashark.html_data import HtmlData
+from data.html_data import HtmlData
 
 class Plot:
     def __init__(self, html):

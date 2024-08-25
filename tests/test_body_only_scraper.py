@@ -1,6 +1,6 @@
 import unittest
 
-from scraper.html_scraper import HtmlScraper
+from scraper.concurrent_html_scraper import HtmlScraper
 from scraper.scraper_strategies.body_only_scraper import BodyOnlyScraper
 
 
